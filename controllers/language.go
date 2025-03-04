@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,8 +47,36 @@ func GetLanguange(c *gin.Context) {
 		// Mengembalikan data default dalam format JSON
 		c.JSON(http.StatusOK, defaultLanguage)
 	} else {
-		// Jika ada data dalam slice, kembalikan data tersebut
-		c.JSON(http.StatusOK, languages)
+		// // Jika ada data dalam slice, kembalikan data tersebut
+		// c.JSON(http.StatusOK, languages)
+
+		// Mendapatkan query pencarian dari parameter URL
+		query := c.Query("query")
+		if query == "" {
+			// Jika tidak ada query, kembalikan seluruh daftar bahasa pemrograman
+			c.JSON(http.StatusOK, languages)
+		} else {
+			// Konversi query menjadi huruf kecil
+			queryLower := strings.ToLower(query)
+			// Slice untuk menyimpan hasil pencarian
+			var results []ProgrammingLanguage
+			// Loop melalui setiap bahasa pemrograman
+			for _, lang := range languages {
+				// Konversi nama bahasa pemrograman menjadi huruf kecil
+				langLower := strings.ToLower(lang.Language)
+				// Periksa apakah nama bahasa pemrograman mengandung query
+				if strings.Contains(langLower, queryLower) {
+					results = append(results, lang)
+				}
+			}
+			// Jika ada hasil pencarian, kembalikan hasil tersebut
+			if len(results) > 0 {
+				c.JSON(http.StatusOK, results)
+			} else {
+				// Jika tidak ada hasil yang cocok, kembalikan pesan tidak ditemukan
+				c.JSON(http.StatusNotFound, gin.H{"message": "Tidak ada data yang ditemukan"})
+			}
+		}
 	}
 }
 
